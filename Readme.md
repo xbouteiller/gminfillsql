@@ -69,12 +69,11 @@ At any time you can't enter **exit** in order to go back to the main menu
 <br> </br>
 
 ### Five choices are available:
-- Length of the leaf or needle
-- Width of the leaf or needle 
-- Thickness of the leaf or needle
-- Fresh weight
-- Output weight
-- Dry weight
+- Instantiate or complete a data base, features of every individual are asked but you can let empty cells
+- Modidy some value
+- Create or complete a second table within the db containing informations (campaign, site, X & Y coordinates, temperature, hygro)
+- Modify or complete a whole feature, it is possible to do it for a specific site or from a unique key number to the end
+- Exit, print a summary and save a csv file
 <br> </br>
 
 ### Five choices are available:
