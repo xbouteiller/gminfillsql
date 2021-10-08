@@ -68,7 +68,7 @@ At any time you can't enter **exit** in order to go back to the main menu
 - Dry weight
 <br> </br>
 
-### 5 choices are available:
+### Five choices are available:
 1. Instantiate or complete a data base, features of every individual are asked but you can let empty cells
 2. Modidy some value
 3. Create or complete a second table within the db containing informations (campaign, site, X & Y coordinates, temperature, hygro)
