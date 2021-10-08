@@ -49,14 +49,16 @@ From the green box  named 'clone' in the right corner > download .zip
 
 The program is designed for gathering morphometric measurements of the samples placed in the gmin climatic chambers.
 
-Categorical features are:
+At any time you can't enter **exit** in order to go back to the main menu
+
+#### Categorical features are
 - Campaign name
 - Site
 - Treatment
 - Tree number
 - Repetion number
 
-Numerical features are:
+#### Numerical features are
 - Length of the leaf or needle
 - Width of the leaf or needle 
 - Thickness of the leaf or needle
@@ -65,11 +67,12 @@ Numerical features are:
 - Dry weight
 
 
-5 choices are available:
+#### 5 choices are available
 1. Instantiate or complete a data base, features of every individual are asked but you can let empty cells
 2. Modidy some value
 3. Create or complete a second table within the db containing informations (campaign, site, X & Y coordinates, temperature, hygro)
 4. Modify or complete a whole feature, it is possible to do it for a specific site or from a unique key number to the end
 5. Exit, print a summary and save a csv file
 
-At any time you can't enter **exit** in order to go back to the main menu
+
+
