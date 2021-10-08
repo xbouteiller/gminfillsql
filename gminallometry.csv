@@ -1,0 +1,4 @@
+,number,campaign,species,site,treatment,tree,rep,length,width,thickness,psimidday,psipredawn,freshweight,outputweight,dryweight,code,note
+0,1,test,pinus pinaster,bdx,a,1,1,,,,,,,,,test_pinus pinaster_bdx_a_1_1,
+1,2,test,pinus pinaster,bdx,a,1,2,44.0,4654.0,6546.0,,,464.0,46.0,6546.0,test_pinus pinaster_bdx_a_1_2,
+2,3,test,pinus pinaster,bdx,y,1,1,65464.0,655464.0,65465.0,,,,,,test_pinus pinaster_bdx_y_1_1,
