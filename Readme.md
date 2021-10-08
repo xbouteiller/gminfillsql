@@ -43,7 +43,7 @@ From the green box  named 'clone' in the right corner > download .zip
 <br> </br>
 
 
-## Utilisation
+## How to use?
 
 <img src="img/Screenshot from 2021-10-08 10-42-40.png" width="75%" height="75%">
 
@@ -57,6 +57,7 @@ At any time you can't enter **exit** in order to go back to the main menu
 - Treatment
 - Tree number
 - Repetion number
+<br> </br>
 
 ### Numerical features are:
 - Length of the leaf or needle
@@ -65,6 +66,7 @@ At any time you can't enter **exit** in order to go back to the main menu
 - Fresh weight
 - Output weight
 - Dry weight
+<br> </br>
 
 ### 5 choices are available:
 1. Instantiate or complete a data base, features of every individual are asked but you can let empty cells
