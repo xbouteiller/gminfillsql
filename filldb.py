@@ -23,7 +23,7 @@ input_prompts = {
     'width':'needle or leaf width (mm): ', 
     'thickness':'needle or leaf thickness (mm): ',    
     'fw':'Fresh Weight (g): ',
-    'rw':'Output Weight (g): ',
+    'ow':'Output Weight (g): ',
     'dw':'Dry Weight (g): ',
     'note': 'Note: '
 }
@@ -39,9 +39,7 @@ sql_create_wp_table = """ CREATE TABLE IF NOT EXISTS {}(
         rep INTEGER,
         length real,
         width real,
-        thickness real,
-        psimidday real,        
-        psipredawn real,        
+        thickness real,           
         freshweight real,
         outputweight real,
         dryweight real,
@@ -335,11 +333,23 @@ class SamplingDataBase():
                         print('Can\'t be converted to an integer, Set to None')
                         response = None
 
-                if (key=='length') | (key=='width') | (key=='thin') | (key=='fw') | (key=='ow') | (key=='dw'):
+                if (key=='length') | (key=='width') | (key=='thickness') | (key=='fw') | (key=='ow') | (key=='dw'):
                     try:
                         response = float(response)
                     except:
+                        #print(key)
                         response = None
+
+                    if response is None and (self.rep-1 == 1 and incr == 1):
+                        print('turned to -99')
+                        response = -99
+                    elif response is None and (self.rep-nofrepet+1 == 1 and incr != 1):
+                        print('turned to -99')
+                        response = -99
+                    else:
+                        pass
+                    #     print('pass')
+                    # print(self.rep-nofrepet+1)
 
                 if key == 'rep':
                     try:
@@ -348,7 +358,7 @@ class SamplingDataBase():
                         response = None
                
                 if (key == 'note' ) & (response == ''):
-                    response = None
+                    response = ''
                                 
                 if response == 'exit':
                     break # break out of for loop
@@ -497,6 +507,15 @@ class SamplingDataBase():
                     except:
                         print('Failed to convert to float, turned to None')
                         response = None
+                    
+                    if response is None and (self.rep-1 == 1 and incr == 1):
+                        print('turned to -99')
+                        response = -99
+                    elif response is None and (self.rep-nofrepet+1 == 1 and incr != 1):
+                        print('turned to -99')
+                        response = -99
+                    else:
+                        pass
 
 
                 if response == 'exit':
@@ -564,15 +583,21 @@ class SamplingDataBase():
         else:                       
             response = input('From number: ') or None
             if response is not None:
-                iterator.execute('SELECT * FROM {} WHERE number > {}'.format(tablename, response))
+                iterator.execute('SELECT * FROM {} WHERE number > {}'.format(tablename, str(int(response)-1)))
             else:
                 iterator.execute('SELECT * FROM {}'.format(tablename))
 
         print('\n')
+
+        existingcol = [vartoupdate == description[0] for description in iterator.description]
+        #print('existingcol: ', existingcol)
+        existingcol = [i for i, x in enumerate(existingcol) if x][0]
         for row in iterator:
             uniquekey = row[0]
             print('species : {0}, site: {1}, treatment: {2}, tree: {3}, rep: {4}'.format(row[2], row[3], row[4],row[5], row[6]))
-            valtofill = input('{} value: '.format(vartoupdate))
+            existingval = row[existingcol]
+
+            valtofill = input('{} value (existing: {}): '.format(vartoupdate, existingval)) or existingval
 
             if valtofill == 'exit' or valtofill == 'e':
                 break
@@ -585,7 +610,13 @@ class SamplingDataBase():
                         except:
                             print('oops, value can\'t be converted to float')
                             valtofill = input('{} value: '.format(vartoupdate))
-                        
+
+                    else:
+                        break
+                
+                if valtofill == -99:
+                    valtofill = -99                        
+                       
                 self._update_task_fk(conn, (valtofill, uniquekey), vartoupdate)
         conn.close()
 
@@ -644,6 +675,16 @@ class SamplingDataBase():
         conn = self._create_connection(self.dbName)
 
         df = pd.read_sql_query('SELECT * FROM {}'.format(tablename), conn)
+        while True:
+            behav = input('Do you want to fill Na by previous value? (y, n) ') or 'y'
+            if behav not in ['y', 'n']:
+                print('oops: should be y or n')
+            else:
+                break
+        if behav:
+            print('Na filled forward')
+            df = df.fillna(method='ffill' )        
+
         df.to_csv(tablename+'.csv')
 
         print(df.groupby(['campaign','site', 'treatment']).mean())
