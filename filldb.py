@@ -44,7 +44,8 @@ sql_create_wp_table = """ CREATE TABLE IF NOT EXISTS {}(
         outputweight real,
         dryweight real,
         code varchar(100) UNIQUE,
-        note varchar(100)
+        note varchar(100),
+        id varchar(20)
         ); """.format(tablename)
 
 sql_create_site_table = """ CREATE TABLE IF NOT EXISTS siteinfo(
@@ -76,8 +77,8 @@ dbcolname = {
 
 
 insert_sql = """
-        INSERT INTO {}(campaign, species, site, treatment, tree, rep, length, width, thickness, freshweight, outputweight, dryweight, code, note)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        INSERT INTO {}(campaign, species, site, treatment, tree, rep, length, width, thickness, freshweight, outputweight, dryweight, code, note, id)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """.format(tablename)
 
 insert_sql_site = """
@@ -239,6 +240,7 @@ class SamplingDataBase():
         self.treat = None
 
         campaign_name = input('\nwhat is the campaign name? ')
+        id_name = input('\nwhat is the id prefix name? ')
 
         while True:
             behav = input('\nBehaviour: do you have samples\' repetition (\'y\' default, \'n\')? ') or 'y'
@@ -258,6 +260,9 @@ class SamplingDataBase():
         incr = 0
         prev_site = None
         prev_treat = None
+        #storage = {'length':None, 'width':None, 'thickness':None, 'fw':None, 'ow':None, 'dw':None}
+        storage = { 'fw':None, 'ow':None, 'dw':None}
+
         
         while True:           
 
@@ -308,6 +313,7 @@ class SamplingDataBase():
                 elif key == 'rep':
                     response = input(self.input_prompts[key]+ ' (or {}) '.format(self.rep)) or self.rep
                     self.rep = int(response)
+                    repet = self.rep
 
                     if behav == 'y':
                         self.rep += 1
@@ -324,8 +330,12 @@ class SamplingDataBase():
 
 
                 else:
-                    response = input(self.input_prompts[key])
-
+                    # print('bool: {}'.format(all([repet != 1 , incr !=1 , key != 'note', key != 'length', key != 'width', key != 'thickness'])))
+                    # print([repet != 1 , incr !=1 , key != 'note', key != 'length', key != 'width', key != 'thickness'])
+                    if all([repet != 1 , incr !=1 , key != 'note', key != 'length', key != 'width', key != 'thickness']):
+                        response = input(self.input_prompts[key] + ' (default {}) '.format(storage[key])) or storage[key]
+                    else:
+                        response = input(self.input_prompts[key])
                 if (key=='tr'):
                     try:
                         response = int(response)
@@ -339,6 +349,7 @@ class SamplingDataBase():
                     except:
                         #print(key)
                         response = None
+                    storage[key] = response
 
                     if response is None and (self.rep-1 == 1 and incr == 1):
                         print('turned to -99')
@@ -372,9 +383,10 @@ class SamplingDataBase():
             # c_number, c_species, c_site, c_treatment, c_psipredawn, c_psimidday, c_freshweight, c_rehydratedweight, c_dryweight = responses
             c_species, c_site, c_treatment, c_tree, c_rep, c_length, c_width, c_thin, c_freshweight, c_outputweight, c_dryweight, c_note = responses
             c_code = '_'.join([campaign_name, c_species, c_site, c_treatment,str(c_tree), str(c_rep)])
+            c_id = id_name + str(c_tree)
 
             # self._create_wp(conn, self.insert_sql, (c_number, c_species, c_site, c_treatment, c_psipredawn, c_psimidday, c_freshweight, c_rehydratedweight, c_dryweight) )
-            self._create_wp(conn, self.insert_sql, (campaign_name, c_species, c_site, c_treatment, c_tree, c_rep, c_length, c_width, c_thin, c_freshweight, c_outputweight, c_dryweight, c_code, c_note) )
+            self._create_wp(conn, self.insert_sql, (campaign_name, c_species, c_site, c_treatment, c_tree, c_rep, c_length, c_width, c_thin, c_freshweight, c_outputweight, c_dryweight, c_code, c_note, c_id) )
 
             responses.clear() # clear our responses, before we start our new while loop iteration
             self.view_db()
@@ -579,25 +591,49 @@ class SamplingDataBase():
         iterator = conn.cursor()
 
         if self.site is not None:
-            iterator.execute("SELECT * FROM {} WHERE site LIKE '{}'".format(tablename, self.site))
+            iterator.execute("SELECT *, MAX(REP) OVER(PARTITION BY campaign, species, site, treatment, tree) FROM {} WHERE site LIKE '{}'".format(tablename, self.site))
         else:                       
             response = input('From number: ') or None
             if response is not None:
-                iterator.execute('SELECT * FROM {} WHERE number > {}'.format(tablename, str(int(response)-1)))
+                iterator.execute('SELECT *,  MAX(REP) OVER(PARTITION BY campaign, species, site, treatment, tree) FROM {} WHERE number > {}'.format(tablename, str(int(response)-1)))
             else:
-                iterator.execute('SELECT * FROM {}'.format(tablename))
+                iterator.execute('SELECT *,  MAX(REP) OVER(PARTITION BY campaign, species, site, treatment, tree)  FROM {}'.format(tablename))
 
         print('\n')
 
+        
         existingcol = [vartoupdate == description[0] for description in iterator.description]
         #print('existingcol: ', existingcol)
         existingcol = [i for i, x in enumerate(existingcol) if x][0]
+        valtofill = None
         for row in iterator:
             uniquekey = row[0]
-            print('species : {0}, site: {1}, treatment: {2}, tree: {3}, rep: {4}'.format(row[2], row[3], row[4],row[5], row[6]))
-            existingval = row[existingcol]
+            print('number: {}, species : {}, site: {}, treatment: {}, tree: {}, rep: {}'.format(row[0], row[2], row[3], row[4],row[5], row[6]))
+            
+            # print(row)
+            # print(row[-1])
+
+
+            # print(valtofill)
+            # NEED TO BE CHECKED
+            if row[existingcol] != -99 and row[existingcol] is not None:
+                #print(1)
+                existingval = row[existingcol]
+            
+            elif valtofill is not None and row[6]<=row[-1]:
+                #print(2)
+                existingval = valtofill
+            else:
+                #print(3)
+                existingval = None    
+
+            #print(valtofill)
+            #print(existingval)  
 
             valtofill = input('{} value (existing: {}): '.format(vartoupdate, existingval)) or existingval
+
+            # if row[6]>1:
+            #     existingval = valtofill
 
             if valtofill == 'exit' or valtofill == 'e':
                 break
